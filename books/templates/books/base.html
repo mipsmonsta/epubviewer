@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EPUB Viewer{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .book-card {
+                    transition: box-shadow 0.3s ease;
+                    border: none;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    background: #fff;
+        }
+        .book-card:hover {
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .reader-content {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+            font-size: 18px;
+        }
+        .chapter-nav {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1000;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .progress-bar {
+            height: 4px;
+            background: #e9ecef;
+        }
+                       .progress-fill {
+                   height: 100%;
+                   background: #007bff;
+                   transition: width 0.3s ease;
+               }
+               
+               /* Chapter dropdown scrolling */
+               .dropdown-menu {
+                   max-height: 300px;
+                   overflow-y: auto;
+               }
+               
+               .dropdown-menu::-webkit-scrollbar {
+                   width: 6px;
+               }
+               
+               .dropdown-menu::-webkit-scrollbar-track {
+                   background: #f1f1f1;
+                   border-radius: 3px;
+               }
+               
+               .dropdown-menu::-webkit-scrollbar-thumb {
+                   background: #c1c1c1;
+                   border-radius: 3px;
+               }
+               
+               .dropdown-menu::-webkit-scrollbar-thumb:hover {
+                   background: #a8a8a8;
+               }
+               
+               /* Chapter dropdown improvements */
+               .dropdown-menu .dropdown-item {
+                   padding: 8px 16px;
+                   border-bottom: 1px solid #f8f9fa;
+                   white-space: nowrap;
+                   overflow: hidden;
+                   text-overflow: ellipsis;
+               }
+               
+               .dropdown-menu .dropdown-item:last-child {
+                   border-bottom: none;
+               }
+               
+               .dropdown-menu .dropdown-item:hover {
+                   background-color: #e9ecef;
+               }
+               
+                                               .dropdown-menu .dropdown-item.active {
+                     background-color: #007bff;
+                     color: white;
+                     font-weight: 600;
+                     border-left: 3px solid #28a745;
+                }
+                
+                .dropdown-menu .dropdown-item.active:hover {
+                     background-color: #0056b3;
+                     color: white;
+                }
+                
+                /* Book cover styling */
+                .book-cover-container {
+                    position: relative;
+                    height: 280px;
+                    overflow: hidden;
+                    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+                    border-radius: 8px 8px 0 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+                }
+                
+                .book-cover {
+                    max-width: 100%;
+                    max-height: 100%;
+                    width: auto;
+                    height: auto;
+                    object-fit: contain;
+                    border-radius: 4px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+                
+                .book-cover:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+                }
+                
+                .book-cover-placeholder {
+                    text-align: center;
+                    padding: 2rem;
+                    color: #6c757d;
+                }
+                
+                .book-cover-placeholder i {
+                    margin-bottom: 1rem;
+                    opacity: 0.6;
+                }
+                
+                .book-cover-placeholder p {
+                    font-size: 0.9rem;
+                    margin: 0;
+                    line-height: 1.3;
+                }
+                
+                /* Responsive book cover sizing */
+                @media (max-width: 768px) {
+                    .book-cover-container {
+                        height: 220px;
+                    }
+                }
+                
+                @media (max-width: 576px) {
+                    .book-cover-container {
+                        height: 200px;
+                    }
+                }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'books:library' %}">
+                <i class="fas fa-book-open me-2"></i>EPUB Viewer
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'books:library' %}">
+                            <i class="fas fa-home me-1"></i>Library
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'books:upload' %}">
+                            <i class="fas fa-upload me-1"></i>Upload
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

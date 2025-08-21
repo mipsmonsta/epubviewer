@@ -1,0 +1,581 @@
+{% extends 'books/base.html' %}
+
+{% block title %}{{ chapter.title }} - {{ book.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Night mode styles */
+    :root {
+        --bg-color: #ffffff;
+        --text-color: #333333;
+        --nav-bg: #ffffff;
+        --border-color: #dee2e6;
+        --progress-bg: #e9ecef;
+        --progress-fill: #007bff;
+        --breadcrumb-bg: #f8f9fa;
+        --breadcrumb-text: #6c757d;
+    }
+
+    [data-theme="night"] {
+        --bg-color: #1a1a1a;
+        --text-color: #ffffff;
+        --text-brightness: 100;
+        --nav-bg: #2d2d2d;
+        --border-color: #404040;
+        --progress-bg: #404040;
+        --progress-fill: #4dabf7;
+        --breadcrumb-bg: #2d2d2d;
+        --breadcrumb-text: #adb5bd;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .chapter-content {
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.8;
+        font-size: 18px;
+        padding-bottom: 100px; /* Add margin at the end of each chapter */
+        color: var(--text-color);
+        transition: color 0.3s ease;
+    }
+    .chapter-content img {
+        max-width: 100%;
+        height: auto;
+        margin: 1rem 0;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .chapter-content img[src*="book_images"] {
+        display: block;
+        margin: 1rem auto;
+    }
+    .chapter-content h1, .chapter-content h2, .chapter-content h3 {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+    }
+    .chapter-content p {
+        margin-bottom: 1.5rem;
+        color: var(--text-color);
+    }
+    .navigation-buttons {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    .progress-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--progress-bg);
+        z-index: 1001;
+        transition: background-color 0.3s ease;
+    }
+    .progress-fill {
+        height: 100%;
+        background: var(--progress-fill);
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    /* Chapter navigation styling */
+    .chapter-nav {
+        background: var(--nav-bg);
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .breadcrumb {
+        background: var(--breadcrumb-bg);
+        transition: background-color 0.3s ease;
+    }
+
+    .breadcrumb-item a {
+        color: var(--breadcrumb-text);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: var(--text-color);
+    }
+
+    .breadcrumb-item.active {
+        color: var(--text-color);
+    }
+
+    /* Night mode toggle button */
+    .night-mode-toggle {
+        background: none;
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-left: 10px;
+    }
+
+    .night-mode-toggle:hover {
+        background: var(--border-color);
+        color: var(--bg-color);
+    }
+
+    .night-mode-toggle i {
+        font-size: 16px;
+        color: var(--text-color);
+        transition: color 0.3s ease;
+    }
+
+    /* Text brightness slider container */
+    .text-brightness-container {
+        display: none;
+        align-items: center;
+        margin-left: 15px;
+        padding: 8px 12px;
+        background: var(--nav-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    [data-theme="night"] .text-brightness-container {
+        display: flex;
+    }
+
+    /* Responsive adjustments for mobile */
+    @media (max-width: 768px) {
+        .text-brightness-container {
+            margin-left: 10px;
+            padding: 6px 10px;
+        }
+        
+        .text-brightness-slider {
+            width: 60px;
+        }
+        
+        .text-brightness-label {
+            font-size: 11px;
+            margin-right: 6px;
+        }
+    }
+
+    .text-brightness-label {
+        font-size: 12px;
+        color: var(--text-color);
+        margin-right: 8px;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .text-brightness-value {
+        font-size: 11px;
+        color: var(--text-color);
+        margin-left: 8px;
+        white-space: nowrap;
+        font-weight: 500;
+        opacity: 0.8;
+    }
+
+    .text-brightness-slider {
+        width: 80px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border-color);
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .text-brightness-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--progress-fill);
+        cursor: pointer;
+        border: 2px solid var(--bg-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+
+    .text-brightness-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .text-brightness-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--progress-fill);
+        cursor: pointer;
+        border: 2px solid var(--bg-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+
+    .text-brightness-slider::-moz-range-thumb:hover {
+        transform: scale(1.1);
+    }
+
+    .text-brightness-slider::-moz-range-track {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border-color);
+        border: none;
+    }
+
+    /* Dropdown styling for night mode */
+    .dropdown-menu {
+        background: var(--nav-bg);
+        border: 1px solid var(--border-color);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .dropdown-item {
+        color: var(--text-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .dropdown-item:hover {
+        background-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .dropdown-item.active {
+        background-color: var(--progress-fill);
+        color: var(--bg-color);
+    }
+
+    /* Button styling for night mode */
+    .btn-outline-primary {
+        border-color: var(--border-color);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--border-color);
+        border-color: var(--border-color);
+        color: var(--bg-color);
+    }
+
+    .btn-primary {
+        background-color: var(--progress-fill);
+        border-color: var(--progress-fill);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--progress-fill);
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="progress-indicator">
+    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+</div>
+
+<div class="chapter-nav py-3">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'books:library' %}">
+                                <i class="fas fa-home me-1"></i>Library
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'books:reader' book.id %}">{{ book.title }}</a>
+                        </li>
+                        <li class="breadcrumb-item active">{{ chapter.title }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-end align-items-center">
+                    <div class="me-3">
+                        <small class="text-muted">
+                            Chapter {{ chapter.order|add:1 }} of {{ chapters.count }}
+                        </small>
+                    </div>
+                    <div class="dropdown me-2">
+                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" 
+                                title="Current: {{ chapter.title }}">
+                            <i class="fas fa-list me-1"></i>Chapters
+                            <span class="badge bg-primary ms-1">{{ chapter.order|add:1 }}</span>
+                            {% if chapters.count > 10 %}
+                                <span class="badge bg-secondary ms-1">{{ chapters.count }}</span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu" id="chapters-dropdown">
+                            {% for ch in chapters %}
+                            <li>
+                                <a class="dropdown-item {% if ch.id == chapter.id %}active{% endif %}" 
+                                   href="{% url 'books:chapter' book.id ch.id %}"
+                                   data-chapter-id="{{ ch.id }}">
+                                    <span class="text-muted me-2">{{ forloop.counter }}.</span>
+                                    {{ ch.title }}
+                                    {% if ch.id == chapter.id %}
+                                        <i class="fas fa-check text-success ms-2"></i>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <!-- Night mode toggle button -->
+                    <button class="night-mode-toggle" id="night-mode-toggle" title="Toggle Night Mode">
+                        <i class="fas fa-moon" id="night-mode-icon"></i>
+                    </button>
+                    
+                    <!-- Text brightness slider (only visible in night mode) -->
+                    <div class="text-brightness-container" id="text-brightness-container">
+                        <span class="text-brightness-label">Text</span>
+                        <input 
+                            type="range" 
+                            class="text-brightness-slider" 
+                            id="text-brightness-slider"
+                            min="0" 
+                            max="100" 
+                            value="100"
+                            title="Adjust text brightness (0% = dark gray, 100% = white)"
+                        >
+                        <span class="text-brightness-value" id="text-brightness-value">100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+                         <div class="chapter-content" id="chapter-content">
+                 {{ chapter.content|safe }}
+             </div>
+        </div>
+    </div>
+</div>
+
+<div class="navigation-buttons">
+    <div class="btn-group" role="group">
+        {% if prev_chapter %}
+        <a href="{% url 'books:chapter' book.id prev_chapter.id %}" class="btn btn-primary">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+        
+        <button type="button" class="btn btn-outline-primary" onclick="scrollToTop()">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+        
+        {% if next_chapter %}
+        <a href="{% url 'books:chapter' book.id next_chapter.id %}" class="btn btn-primary">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Night mode functionality
+function initNightMode() {
+    const toggle = document.getElementById('night-mode-toggle');
+    const icon = document.getElementById('night-mode-icon');
+    const body = document.body;
+    const brightnessSlider = document.getElementById('text-brightness-slider');
+    
+    // Check for saved theme preference or default to 'light'
+    const currentTheme = localStorage.getItem('night-mode') || 'light';
+    const savedBrightness = localStorage.getItem('text-brightness') || '100';
+    
+    // Apply the saved theme
+    if (currentTheme === 'night') {
+        body.setAttribute('data-theme', 'night');
+        icon.className = 'fas fa-sun';
+        toggle.title = 'Switch to Light Mode';
+        
+        // Apply saved brightness
+        brightnessSlider.value = savedBrightness;
+        updateTextBrightness(savedBrightness);
+        
+        // Update the displayed value
+        const valueDisplay = document.getElementById('text-brightness-value');
+        if (valueDisplay) {
+            valueDisplay.textContent = savedBrightness + '%';
+        }
+    } else {
+        body.removeAttribute('data-theme');
+        icon.className = 'fas fa-moon';
+        toggle.title = 'Switch to Night Mode';
+    }
+    
+    // Toggle function
+    toggle.addEventListener('click', function() {
+        const isNightMode = body.getAttribute('data-theme') === 'night';
+        
+        if (isNightMode) {
+            // Switch to light mode
+            body.removeAttribute('data-theme');
+            icon.className = 'fas fa-moon';
+            toggle.title = 'Switch to Night Mode';
+            localStorage.setItem('night-mode', 'light');
+            
+            // Reset text color to default for light mode
+            body.style.removeProperty('--text-color');
+        } else {
+            // Switch to night mode
+            body.setAttribute('data-theme', 'night');
+            icon.className = 'fas fa-sun';
+            toggle.title = 'Switch to Light Mode';
+            localStorage.setItem('night-mode', 'night');
+            
+            // Apply saved brightness when switching to night mode
+            const savedBrightness = localStorage.getItem('text-brightness') || '100';
+            brightnessSlider.value = savedBrightness;
+            updateTextBrightness(savedBrightness);
+            
+            // Update the displayed value
+            const valueDisplay = document.getElementById('text-brightness-value');
+            if (valueDisplay) {
+                valueDisplay.textContent = savedBrightness + '%';
+            }
+        }
+    });
+    
+    // Text brightness slider functionality
+    brightnessSlider.addEventListener('input', function() {
+        const brightness = this.value;
+        updateTextBrightness(brightness);
+        localStorage.setItem('text-brightness', brightness);
+        
+        // Update the displayed value
+        const valueDisplay = document.getElementById('text-brightness-value');
+        if (valueDisplay) {
+            valueDisplay.textContent = brightness + '%';
+        }
+    });
+}
+
+// Function to update text brightness
+function updateTextBrightness(brightness) {
+    const body = document.body;
+    const brightnessPercent = parseInt(brightness);
+    
+    // Calculate text color based on brightness (100% = white, 0% = dark gray)
+    const textColor = `hsl(0, 0%, ${brightnessPercent}%)`;
+    
+    // Update CSS custom property
+    body.style.setProperty('--text-color', textColor);
+}
+
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Update progress as user scrolls
+window.addEventListener('scroll', function() {
+    const scrollTop = window.pageYOffset;
+    const docHeight = document.body.offsetHeight - window.innerHeight;
+    const scrollPercent = (scrollTop / docHeight) * 100;
+    
+    document.getElementById('progress-fill').style.width = scrollPercent + '%';
+    
+    // Update progress in database
+    if (scrollPercent > 10) { // Only update if user has read more than 10%
+        updateProgress(scrollPercent);
+    }
+});
+
+function updateProgress(progress) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const formData = new FormData();
+    formData.append('position', Math.round(progress));
+    formData.append('chapter_id', '{{ chapter.id }}');
+    
+    fetch('{% url "books:update_progress" book.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: formData
+    }).then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            console.log('Progress updated successfully:', data.message);
+        } else {
+            console.error('Progress update failed:', data.message);
+        }
+    }).catch(error => {
+        console.error('Error updating progress:', error);
+    });
+}
+
+// Restore scroll position if returning to last read chapter
+{% if restore_position and last_position > 0 %}
+window.addEventListener('load', function() {
+    const scrollPercent = {{ last_position }};
+    const docHeight = document.body.offsetHeight - window.innerHeight;
+    const scrollPosition = (scrollPercent / 100) * docHeight;
+    window.scrollTo(0, scrollPosition);
+    document.getElementById('progress-fill').style.width = scrollPercent + '%';
+});
+{% endif %}
+
+// Auto-scroll dropdown to current chapter when opened
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize night mode
+    initNightMode();
+    
+    const dropdown = document.getElementById('chapters-dropdown');
+    const currentChapterItem = dropdown.querySelector('.dropdown-item.active');
+    
+    if (currentChapterItem) {
+        // Scroll to current chapter when dropdown is shown
+        const dropdownToggle = dropdown.previousElementSibling;
+        dropdownToggle.addEventListener('click', function() {
+            setTimeout(() => {
+                currentChapterItem.scrollIntoView({ 
+                    block: 'center', 
+                    behavior: 'smooth' 
+                });
+            }, 100);
+        });
+    }
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft' && {% if prev_chapter %}true{% else %}false{% endif %}) {
+        window.location.href = '{% if prev_chapter %}{% url "books:chapter" book.id prev_chapter.id %}{% endif %}';
+    } else if (e.key === 'ArrowRight' && {% if next_chapter %}true{% else %}false{% endif %}) {
+        window.location.href = '{% if next_chapter %}{% url "books:chapter" book.id next_chapter.id %}{% endif %}';
+    }
+});
+</script>
+{% endblock %}

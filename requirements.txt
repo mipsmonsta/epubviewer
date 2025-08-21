@@ -1,0 +1,6 @@
+Django
+ebooklib
+lxml
+Pillow
+python-magic
+beautifulsoup4

@@ -1,0 +1,82 @@
+{% extends 'books/base.html' %}
+
+{% block title %}Library - EPUB Viewer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-books me-2"></i>Your Library</h1>
+            <a href="{% url 'books:upload' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Upload EPUB
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if books %}
+    <div class="row">
+        {% for book in books %}
+        <div class="col-md-4 col-lg-3 mb-4">
+                         <div class="card book-card h-100">
+                 <div class="book-cover-container">
+                     {% if book.cover_image %}
+                         <img src="{{ book.cover_image.url }}" class="book-cover" alt="{{ book.title }}">
+                     {% else %}
+                         <div class="book-cover-placeholder">
+                             <i class="fas fa-book fa-3x text-muted"></i>
+                             <p class="text-muted mt-2">{{ book.title }}</p>
+                         </div>
+                     {% endif %}
+                 </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    {% if book.author %}
+                        <p class="card-text text-muted">{{ book.author }}</p>
+                    {% endif %}
+                    <p class="card-text">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ book.uploaded_at|date:"M d, Y" }}
+                        </small>
+                    </p>
+                                         <p class="card-text">
+                         <small class="text-muted">
+                             <i class="fas fa-file me-1"></i>
+                             {{ book.chapters.count }} chapters
+                         </small>
+                     </p>
+                     {% if book.last_chapter %}
+                     <p class="card-text">
+                         <small class="text-success">
+                             <i class="fas fa-bookmark me-1"></i>
+                             Last read: {{ book.last_chapter.title }}
+                         </small>
+                     </p>
+                     {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'books:reader' book.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-book-open me-1"></i>Read
+                        </a>
+                        <a href="{% url 'books:delete' book.pk %}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-books fa-4x text-muted mb-3"></i>
+        <h3 class="text-muted">No books yet</h3>
+        <p class="text-muted">Upload your first EPUB to get started!</p>
+        <a href="{% url 'books:upload' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-upload me-2"></i>Upload EPUB
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
