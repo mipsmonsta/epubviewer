@@ -345,6 +345,10 @@
                         </ul>
                     </div>
                     
+                    <a href="{% url 'books:pdf_options' book.id %}" class="btn btn-outline-success btn-sm me-2" title="Generate PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                    
                     <!-- Night mode toggle button -->
                     <button class="night-mode-toggle" id="night-mode-toggle" title="Toggle Night Mode">
                         <i class="fas fa-moon" id="night-mode-icon"></i>

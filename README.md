@@ -8,6 +8,7 @@ A Django-based web application for viewing EPUB files. Upload your EPUB books an
 - **Library Management**: View all your uploaded books
 - **Chapter Navigation**: Easy navigation between chapters
 - **Reading Progress**: Track your reading progress
+- **PDF Generation**: Convert EPUB books to PDF with multiple format options
 - **Responsive Design**: Works on desktop and mobile devices
 - **Clean Interface**: Modern, distraction-free reading experience
 
@@ -18,6 +19,7 @@ A Django-based web application for viewing EPUB files. Upload your EPUB books an
 - **HTML Parsing**: BeautifulSoup4 4.13.4
 - **XML Processing**: lxml 6.0.0
 - **Image Processing**: Pillow 11.3.0
+- **PDF Generation**: WeasyPrint
 - **Frontend**: Bootstrap 5.3.0, Font Awesome 6.0.0
 
 ## Installation
@@ -88,6 +90,34 @@ A Django-based web application for viewing EPUB files. Upload your EPUB books an
 - **Chapter Dropdown**: Quick access to any chapter
 - **Responsive Design**: Optimized for all screen sizes
 
+### PDF Generation
+
+The EPUB Viewer now supports converting books to PDF format with multiple options:
+
+1. **Format Options**:
+   - **Standard**: A4 page size, optimized for desktop and tablet viewing
+   - **Mobile**: Narrow page width with larger fonts, optimized for smartphone reading
+
+2. **Quality Options**:
+   - **Standard Quality**: Fast generation, smaller file size
+   - **High Quality**: Better typography, recommended for most uses
+   - **Print Quality**: Maximum quality for printing
+
+3. **How to Generate PDFs**:
+   - From the Library page: Click the "PDF" button on any book card
+   - From the Reader page: Click the "PDF" button in the navigation
+   - From any Chapter page: Click the "PDF" button in the navigation
+   - Select your preferred format and quality options
+   - Click "Generate & Download PDF"
+
+4. **PDF Features**:
+   - Complete book content with all chapters
+   - Table of contents with page numbers
+   - Title page with book metadata
+   - Proper page numbering
+   - Optimized typography and layout
+   - Image support (if present in EPUB)
+
 ## Project Structure
 
 ```
@@ -104,13 +134,15 @@ epubviewer/
 │   ├── urls.py              # App URL patterns
 │   ├── forms.py             # Form definitions
 │   ├── epub_parser.py       # EPUB processing logic
+│   ├── pdf_generator.py     # PDF generation logic
 │   └── templates/           # HTML templates
 │       └── books/
 │           ├── base.html    # Base template
 │           ├── library.html # Library page
 │           ├── upload.html  # Upload page
 │           ├── reader.html  # Book reader
-│           └── chapter.html # Chapter view
+│           ├── chapter.html # Chapter view
+│           └── pdf_options.html # PDF generation options
 ├── media/                   # Uploaded files
 │   ├── epubs/              # EPUB files
 │   └── covers/             # Cover images
@@ -141,6 +173,8 @@ epubviewer/
 - `GET /book/<id>/`: Book reader page
 - `GET /book/<book_id>/chapter/<chapter_id>/`: Chapter view
 - `POST /book/<book_id>/progress/`: Update reading progress
+- `GET /book/<book_id>/pdf/`: PDF generation options page
+- `GET /book/<book_id>/pdf/generate/`: Generate and download PDF
 
 ## Development
 
@@ -155,6 +189,19 @@ epubviewer/
 
 ```bash
 python manage.py test
+```
+
+### Testing PDF Generation
+
+```bash
+# Test PDF generation for all books
+python manage.py test_pdf_generation
+
+# Test PDF generation for a specific book
+python manage.py test_pdf_generation --book-id 1
+
+# Test with specific format and quality
+python manage.py test_pdf_generation --format mobile --quality high
 ```
 
 ### Database Reset

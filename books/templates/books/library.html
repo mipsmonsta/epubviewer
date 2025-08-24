@@ -60,6 +60,9 @@
                         <a href="{% url 'books:reader' book.pk %}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-book-open me-1"></i>Read
                         </a>
+                        <a href="{% url 'books:pdf_options' book.pk %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-file-pdf me-1"></i>PDF
+                        </a>
                         <a href="{% url 'books:delete' book.pk %}" class="btn btn-outline-danger btn-sm">
                             <i class="fas fa-trash me-1"></i>Delete
                         </a>

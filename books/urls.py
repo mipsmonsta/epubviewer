@@ -11,4 +11,6 @@ urlpatterns = [
     path('book/<int:book_id>/chapter/<int:chapter_id>/', views.chapter_view, name='chapter'),
     path('book/<int:book_id>/progress/', views.update_progress, name='update_progress'),
     path('debug/progress/', views.debug_progress, name='debug_progress'),
+    path('book/<int:book_id>/pdf/', views.pdf_options, name='pdf_options'),
+    path('book/<int:book_id>/pdf/generate/', views.generate_pdf, name='generate_pdf'),
 ]

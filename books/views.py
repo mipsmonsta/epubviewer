@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponse
 from .models import Book, Chapter
 from .forms import BookUploadForm
 from .epub_parser import parse_epub, extract_cover_image
+from .pdf_generator import PDFGenerator
 
 class LibraryView(ListView):
     model = Book
@@ -152,3 +153,50 @@ def debug_progress(request):
         response += f"  Total Chapters: {info['total_chapters']}\n\n"
     
     return HttpResponse(response, content_type='text/plain')
+
+def generate_pdf(request, book_id):
+    """Generate PDF from EPUB book"""
+    book = get_object_or_404(Book, id=book_id)
+    
+    # Get format and quality parameters
+    format_type = request.GET.get('format', 'standard')
+    quality = request.GET.get('quality', 'standard')
+    
+    # Validate parameters
+    if format_type not in ['standard', 'mobile']:
+        format_type = 'standard'
+    if quality not in ['standard', 'high', 'print']:
+        quality = 'standard'
+    
+    try:
+        # Generate PDF
+        pdf_generator = PDFGenerator(book)
+        response = pdf_generator.get_pdf_response(format_type, quality)
+        
+        # Add success message
+        messages.success(request, f'PDF generated successfully for "{book.title}"')
+        
+        return response
+        
+    except Exception as e:
+        messages.error(request, f'Error generating PDF: {str(e)}')
+        return redirect('books:reader', pk=book_id)
+
+def pdf_options(request, book_id):
+    """Show PDF generation options page"""
+    book = get_object_or_404(Book, id=book_id)
+    
+    context = {
+        'book': book,
+        'format_options': [
+            {'value': 'standard', 'label': 'Standard (Desktop/Tablet)', 'description': 'Standard A4 page size, optimized for desktop and tablet viewing'},
+            {'value': 'mobile', 'label': 'Mobile (Smartphone)', 'description': 'Narrow page width, larger fonts, optimized for smartphone reading'},
+        ],
+        'quality_options': [
+            {'value': 'standard', 'label': 'Standard Quality', 'description': 'Fast generation, smaller file size'},
+            {'value': 'high', 'label': 'High Quality', 'description': 'Better typography, larger file size'},
+            {'value': 'print', 'label': 'Print Quality', 'description': 'Maximum quality for printing'},
+        ]
+    }
+    
+    return render(request, 'books/pdf_options.html', context)
