@@ -111,6 +111,9 @@ class PDFGenerator:
         pdf_dir = os.path.join(settings.MEDIA_ROOT, 'pdfs')
         os.makedirs(pdf_dir, exist_ok=True)
         
+        # Clean up old PDF files for this book (keep max 5 files)
+        self._cleanup_old_pdfs(pdf_dir, safe_title)
+        
         return os.path.join(pdf_dir, pdf_filename)
     
     def _generate_pdf_content(self, pdf_path, chapters, format_type, quality):
@@ -477,6 +480,29 @@ class PDFGenerator:
         
         canvas.drawString(x, y, text)
         canvas.restoreState()
+    
+    def _cleanup_old_pdfs(self, pdf_dir, book_title):
+        """Clean up old PDF files, keeping only the 5 most recent across all books"""
+        import glob
+        from datetime import datetime
+        
+        # Find all PDF files in the directory
+        pattern = os.path.join(pdf_dir, "*.pdf")
+        all_pdf_files = glob.glob(pattern)
+        
+        if len(all_pdf_files) > 5:
+            # Sort files by modification time (oldest first)
+            all_pdf_files.sort(key=lambda x: os.path.getmtime(x))
+            
+            # Remove oldest files, keeping only the 5 most recent
+            files_to_remove = all_pdf_files[:-5]
+            
+            for file_path in files_to_remove:
+                try:
+                    os.remove(file_path)
+                    print(f"Removed old PDF: {os.path.basename(file_path)}")
+                except OSError as e:
+                    print(f"Error removing file {file_path}: {e}")
     
 
     
